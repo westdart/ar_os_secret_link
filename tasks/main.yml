@@ -1,4 +1,5 @@
 ---
+# Each record in this loop represents a service account and list of secrets to use
 - name: Link Secrets with Service accounts
   include_tasks: link_secret.yml
   with_items: "{{ ar_os_secret_link_items }}"
