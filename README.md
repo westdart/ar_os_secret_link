@@ -47,7 +47,7 @@ Example Openshift Applier stanza
     post_steps:
       - role: ar_os_scc_binding
         vars:
-          tmp_dep_dir: "roles/"
+          tmp_dep_dir:
           ar_os_scc_binding_items: [{name: 'aspera-sa', namespace: 'dif-dev', scc: 'anyuid'}]
 
 ```
