@@ -1,53 +1,66 @@
-ar_os_scc_binding
------------------
+# ar_os_secret_link
 
-Enable setting of Security Context Constraints against an Openshift
-Service Account
+Link a secret to a Service Account
 
-Requirements
-------------
-
-
-Role Variables
---------------
-
-| Variable                | Description                                 | Default |
-| --------                | -----------                                 | ------- |
-| ar_os_scc_binding_items | Object defining the SCC Binding (See below) | None    |
+## Requirements
+- oc command line is available
+- Execution is made by user able to create secret links (oc secret link) 
 
 
-The structure of the 'ar_os_scc_binding_items' is:
+## Role Variables
+The following details:
+- the parameters that should be passed to the role (aka vars)
+- the defaults that are held
+- the secrets that should generally be sourced from an ansible vault.
+
+### Parameters:
+
+| Variable                    | Description                                  | Default |
+| --------                    | -----------                                  | ------- |
+| ar_os_secret_link_namespace | Namespace on which to operate                | None    |
+| ar_os_secret_link_items     | Object defining the Secret links (See below) | None    |
+
+
+The structure of the 'ar_os_secret_link_items' is:
 ```
+[
   {
-    name: "<the service account name>",
-    namespace: "<the namespace teh service account is in>",
-    scc: "<name of the scc to ascibe to the service account>",
-  }
+    sa_name: '<the service account name>'
+    link_secrets: [
+      {
+        secret_name: '<the secret name>'
+        operation: '<Type of operation ['pull' | 'push']>'
+      }, ... 
+    ]     
+  }, 
+  ... 
+]
 ```
 
-Example Openshift Applier stanza
-----------------
+### Defaults
+| Variable                     | Description                              | Default                                                                                                                                        |
+| --------                     | -----------                              | -------                                                                                                                                        |
+| ar_os_secret_link_assertions | List of assertions made before execution | 'ar_os_secret_link_namespace' is provided and for each link item 'sa_name' is provided and for each link item secret 'secret_name' is provided |
+
+### Secrets
+The following variables should be provided through an encrypted source:
+
+## Example Playbook
 
 ```
-- object: Service Accounts for DEV
-  content:
-  - name: aspera-serviceaccount-serviceaccount
-    namespace: "dif-dev"
-    template: "serviceaccount-template.yml"
-    action: apply
-    params_from_vars:
-      SA_NAME: aspera-sa
-      SA_NAMESPACE: dif-dev
-    tags:
-    - projects
-    - serviceaccounts
-    - aspera
-    - amqbroker
-    - amqic
-    post_steps:
-      - role: ar_os_scc_binding
-        vars:
-          tmp_dep_dir:
-          ar_os_scc_binding_items: [{name: 'aspera-sa', namespace: 'dif-dev', scc: 'anyuid'}]
-
+- hosts: localhost
+  tasks:
+    - name: Include Secret Links
+      include_role:
+        name: ar_os_secret_link
+      vars:
+        ar_os_secret_link_namespace: "sunshine-desserts"
+        ar_os_secret_link_items: [
+          {
+            sa_name: 'default', 
+            link_secrets: [
+              { secret_name: 't2-registry-credential' }
+            ]
+          }
+        ]
 ```
